@@ -3,28 +3,42 @@ package main
 import (
 	"log"
 
+	"github.com/omaaartamer/factory-checkin-api/internal/queue"
 	"github.com/omaaartamer/factory-checkin-api/internal/repository"
+	"github.com/omaaartamer/factory-checkin-api/internal/service"
 	"github.com/omaaartamer/factory-checkin-api/pkg/config"
 )
 
 func main() {
-	// Load configuration
 	cfg := config.Load()
-
 	log.Printf("Starting Factory Check-in API on port %s", cfg.Port)
-	log.Printf("Connecting to database: %s", cfg.DatabaseURL)
 
-	// Initialize repository (this will create tables)
+	// Initialize repository
 	repo, err := repository.NewRepository(cfg.DatabaseURL)
 	if err != nil {
 		log.Fatalf("Failed to initialize repository: %v", err)
 	}
 	defer repo.Close()
 
-	log.Println("Database connection successful!")
-	log.Println("Tables created/verified!")
-	log.Printf("Application ready on port %s", cfg.Port)
+	// Initialize queue
+	q := queue.NewInMemoryQueue()
+	defer q.Close()
 
-	// Keep the app running
+	// Initialize service
+	checkinService := service.NewCheckinService(repo, q)
+
+	log.Println("Database connected!")
+	log.Println("Queue initialized!")
+	log.Println("Business logic ready!")
+
+	// Test check-in
+	response, err := checkinService.ProcessCheckin("EMP001")
+	if err != nil {
+		log.Printf("Test failed: %v", err)
+	} else {
+		log.Printf("Test passed: %s", response.Message)
+	}
+
+	log.Printf("Application ready!")
 	select {}
 }
