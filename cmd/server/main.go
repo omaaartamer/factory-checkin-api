@@ -2,11 +2,15 @@ package main
 
 import (
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/omaaartamer/factory-checkin-api/internal/handler"
 	"github.com/omaaartamer/factory-checkin-api/internal/queue"
 	"github.com/omaaartamer/factory-checkin-api/internal/repository"
 	"github.com/omaaartamer/factory-checkin-api/internal/service"
+	"github.com/omaaartamer/factory-checkin-api/internal/worker"
 	"github.com/omaaartamer/factory-checkin-api/pkg/config"
 )
 
@@ -34,6 +38,11 @@ func main() {
 	// Initialize service
 	checkinService := service.NewCheckinService(repo, q)
 
+	// Initialize background worker
+	bgWorker := worker.NewWorker(q, cfg)
+	bgWorker.Start()
+	defer bgWorker.Stop()
+
 	// Initialize HTTP handler
 	h := handler.NewHandler(checkinService)
 	router := h.SetupRoutes()
@@ -51,7 +60,16 @@ func main() {
 	// }
 	// Start HTTP server
 
-	if err := router.Run(":" + cfg.Port); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
-	}
+	// Graceful shutdown
+	go func() {
+		if err := router.Run(":" + cfg.Port); err != nil {
+			log.Fatalf("Failed to start server: %v", err)
+		}
+	}()
+
+	// Wait for interrupt signal
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Println("Shutting down server...")
 }

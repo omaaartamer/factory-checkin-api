@@ -1,11 +1,21 @@
 package config
 
-import "os"
+import (
+	"os"
+	"strconv"
+)
 
 type Config struct {
-	Port        string
-	DatabaseURL string
-	RedisURL    string
+	Port              string
+	DatabaseURL       string
+	RedisURL          string
+	LegacyAPIURL      string
+	SMTPHost          string
+	SMTPPort          int
+	SMTPUsername      string
+	SMTPPassword      string
+	MaxRetries        int
+	RetryDelaySeconds int
 }
 
 func Load() *Config {
@@ -19,6 +29,15 @@ func Load() *Config {
 func getEnv(key, defaultValue string) string {
 	if value := os.Getenv(key); value != "" {
 		return value
+	}
+	return defaultValue
+}
+
+func getEnvAsInt(key string, defaultValue int) int {
+	if value := os.Getenv(key); value != "" {
+		if intVal, err := strconv.Atoi(value); err == nil {
+			return intVal
+		}
 	}
 	return defaultValue
 }
