@@ -26,12 +26,9 @@ func main() {
 	defer repo.Close()
 
 	// Initialize queue
-	// q := queue.NewInMemoryQueue()
-	// defer q.Close()
-	// Initialize Redis queue
-	q, err := queue.NewRedisQueue(cfg.RedisURL)
+	q, err := queue.NewRabbitMQQueue(cfg.RabbitMQURL)
 	if err != nil {
-		log.Fatalf("Failed to initialize Redis queue: %v", err)
+		log.Fatalf("Failed to initialize RabbitMQ queue: %v", err)
 	}
 	defer q.Close()
 
@@ -48,19 +45,9 @@ func main() {
 	router := h.SetupRoutes()
 
 	log.Println("Database Connected!")
-	log.Println("Redis Queue Connected!")
+	log.Println("RabbitMQ Queue Connected!")
 	log.Println("Business logic ready!")
 
-	// // Test check-in
-	// response, err := checkinService.ProcessCheckin("EMP001")
-	// if err != nil {
-	// 	log.Printf("Test failed: %v", err)
-	// } else {
-	// 	log.Printf("Test passed: %s", response.Message)
-	// }
-	// Start HTTP server
-
-	// Graceful shutdown
 	go func() {
 		if err := router.Run(":" + cfg.Port); err != nil {
 			log.Fatalf("Failed to start server: %v", err)

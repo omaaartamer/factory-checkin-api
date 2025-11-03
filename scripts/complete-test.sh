@@ -69,8 +69,8 @@ for emp in "${EMPLOYEES[@]}"; do
 done
 
 echo "Test 5: Infrastructure Health"
-echo "  🔍 Redis Status:"
-docker exec factory-checkin-redis redis-cli info replication | head -5
+echo "  🔍 RabbitMQ Status:"
+docker exec factory-checkin-rabbitmq rabbitmq-diagnostics status | head -5
 
 echo "  🔍 PostgreSQL Status:"
 docker exec factory-checkin-db psql -U checkin_user -d checkin_db -c "SELECT COUNT(*) as checkin_events FROM checkin_events;"

@@ -8,7 +8,7 @@ import (
 type Config struct {
 	Port              string
 	DatabaseURL       string
-	RedisURL          string
+	RabbitMQURL       string
 	LegacyAPIURL      string
 	SMTPHost          string
 	SMTPPort          int
@@ -20,9 +20,16 @@ type Config struct {
 
 func Load() *Config {
 	return &Config{
-		Port:        getEnv("PORT", "8080"),
-		DatabaseURL: getEnv("DATABASE_URL", "postgres://checkin_user:checkin_password@localhost:5432/checkin_db?sslmode=disable"),
-		RedisURL:    getEnv("REDIS_URL", "redis://localhost:6379"),
+		Port:              getEnv("PORT", "8080"),
+		DatabaseURL:       getEnv("DATABASE_URL", "postgres://checkin_user:checkin_password@localhost:5432/checkin_db?sslmode=disable"),
+		LegacyAPIURL:      getEnv("LEGACY_API_URL", "http://localhost:9000/api/labor-cost"),
+		SMTPHost:          getEnv("SMTP_HOST", "localhost"),
+		SMTPPort:          getEnvAsInt("SMTP_PORT", 587),
+		SMTPUsername:      getEnv("SMTP_USERNAME", ""),
+		SMTPPassword:      getEnv("SMTP_PASSWORD", ""),
+		RabbitMQURL:       getEnv("RABBITMQ_URL", "amqp://checkin_user:checkin_password@localhost:5672/"),
+		MaxRetries:        getEnvAsInt("MAX_RETRIES", 5),
+		RetryDelaySeconds: getEnvAsInt("RETRY_DELAY_SECONDS", 30),
 	}
 }
 
