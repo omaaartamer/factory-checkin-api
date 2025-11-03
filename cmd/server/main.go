@@ -22,7 +22,13 @@ func main() {
 	defer repo.Close()
 
 	// Initialize queue
-	q := queue.NewInMemoryQueue()
+	// q := queue.NewInMemoryQueue()
+	// defer q.Close()
+	// Initialize Redis queue
+	q, err := queue.NewRedisQueue(cfg.RedisURL)
+	if err != nil {
+		log.Fatalf("Failed to initialize Redis queue: %v", err)
+	}
 	defer q.Close()
 
 	// Initialize service
@@ -32,8 +38,8 @@ func main() {
 	h := handler.NewHandler(checkinService)
 	router := h.SetupRoutes()
 
-	log.Println("Database connected!")
-	log.Println("Queue initialized!")
+	log.Println("Database Connected!")
+	log.Println("Redis Queue Connected!")
 	log.Println("Business logic ready!")
 
 	// // Test check-in
