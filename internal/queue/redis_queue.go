@@ -10,6 +10,15 @@ import (
 	"github.com/omaaartamer/factory-checkin-api/internal/model"
 )
 
+type Queue interface {
+	Enqueue(msg *model.QueueMessage) error
+	Dequeue() (*model.QueueMessage, error)
+	MarkCompleted(messageID string) error
+	MarkFailed(messageID string) error
+	GetPendingCount() int
+	Close() error
+}
+
 type RedisQueue struct {
 	client *redis.Client
 	ctx    context.Context
@@ -144,7 +153,7 @@ func (q *RedisQueue) MarkFailed(messageID string) error {
 
 		updatedData, _ := json.Marshal(msg)
 		q.client.HSet(q.ctx, "messages", messageID, updatedData)
-		
+
 		// Re-queue after delay (simplified - in production you'd use Redis delayed jobs)
 		q.client.LPush(q.ctx, "pending", messageID)
 	} else {
@@ -164,4 +173,29 @@ func (q *RedisQueue) GetPendingCount() int {
 
 func (q *RedisQueue) Close() error {
 	return q.client.Close()
+}
+
+// Helper function to create queue messages
+func CreateLaborCostMessage(employeeID string, hoursWorked float64, date string) *model.QueueMessage {
+	return &model.QueueMessage{
+		Type: "labor_cost_report",
+		Payload: map[string]interface{}{
+			"employee_id":  employeeID,
+			"hours_worked": hoursWorked,
+			"date":         date,
+		},
+		MaxAttempts: 5,
+	}
+}
+
+func CreateEmailMessage(employeeID string, hoursWorked float64, date string) *model.QueueMessage {
+	return &model.QueueMessage{
+		Type: "email_notification",
+		Payload: map[string]interface{}{
+			"employee_id":  employeeID,
+			"hours_worked": hoursWorked,
+			"date":         date,
+		},
+		MaxAttempts: 3,
+	}
 }
