@@ -158,7 +158,7 @@ factory-checkin-api/
 
 ### Prerequisites
 - Docker and Docker Compose
-- Go 1.24+ (for development)
+- Go 1.21+ (for development)
 - jq (for testing)
 
 ### Clone and Run
