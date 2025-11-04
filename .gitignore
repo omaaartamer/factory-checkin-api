@@ -1,0 +1,12 @@
+# Go build artifacts
+main
+*.exe
+*.test
+*.out
+
+# Temporary files
+tmp/
+*.log
+
+# Environment files
+.env
